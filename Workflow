@@ -89,7 +89,7 @@ cd /data/EmiolaLab/duann2/human_proj/human_ref/qsubfile
 bowtie2 -x GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index -p 16 -1 /data/duann2/human_proj/repair_fastq/${f}_1_paired.fq.gz -2 /data/duann2/human_proj/repair_fastq/${f}_2_paired.fq.gz -S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}.sam
 # this is pair end
 #bowtie2 -x GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index -p 16 -f -U /data/EmiolaLab/Oral/Periodontitis/${f}.fasta.gz -S /data/EmiolaLab/duann2/sgene_proj/smorf_mapping/samfile/${f}.sam
-# this is for single end
+# this is for single end, you give -f must be fasta file!!!
 
 samtools view -bS -@ 16 /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}.sam | samtools sort > /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}_sortedIndexed.bam
 
@@ -226,9 +226,28 @@ sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/ext
 done
 
 6. use single fastq mapped to the indexed rep82 database obtained from shogun pipeline
-https://github.com/knights-lab/SHOGUN
+https://github.com/knights-lab/SHOGUN. #shogun doesn't work which create the empty file. so I am manually run it
 wget -i https://raw.githubusercontent.com/knights-lab/SHOGUN/master/docs/shogun_db_links.txt
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/
+for f in `cat srr95.txt`
+do
+cat <<EOT >> $f\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16 
+#SBATCH --mem=32g
+#SBATCH --gres=lscratch:800
+#SBATCH --time=10-00:00:00
+module load bowtie/2
+cd /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/bt2/
 
+bowtie2 -x rep82 -p 16 -f -U /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq/${f}.unmapped.fasta -S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/bowtie_sam/${f}.unmapped.sam
+
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/$f\.qsub
+done
 
 
 
