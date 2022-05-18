@@ -1,0 +1,235 @@
+The data obtained from this paper:
+https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-021-00852-8#availability-of-data-and-materials
+https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA681391
+There is 107 samples and 214 
+
+1.	Download the fastq from NCBI db
+fastqdump.sh
+You can use split to split the file before submit the job
+#split -l 100 -d list.txt myfile
+#split -l 2 -d list_srr_human.txt split_ # splited file include only 2 lines
+
+#!/bin/bash
+cd /data/duann2/human_proj/qsubfile/
+for f in `cat one.txt` 
+#one.txt:
+#SRR13215448
+#SRR13215449
+...
+
+do
+cat <<EOT >> $f\.qsub 
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=32g
+#SBATCH --gres=lscratch:500
+#SBATCH --time=5-00:00:00
+module load sratoolkit
+prefetch ${f} --max-size 200g # you gonna get a bunch of .sra file 
+#or you can use a bulk downloading(srrlist.txt contain the list of sample name): prefetch --option-file /data/duann2/srrlist.txt --max-size 100g -O /data/duann2/human_proj
+
+fastq-dump --outdir /data/duann2/human_proj/fastq12 --gzip --readids --split-files /data/duann2/human_proj/qsubfile/${f}/${f}.sra # you will get 2 fastq file
+
+EOT
+sbatch /data/duann2/human_proj/qsubfile/$f\.qsub #submit all these jobs and run it
+done
+
+2. Downloading the human db reference GRCh38.p13 to do the bowtie mapping
+module load edirect
+download ftp link and save it in the file list_huref_test.txt
+#!/bin/bash
+esearch -db bioproject -query 31257 \
+        | elink -target assembly \
+        | esummary \
+        | grep "FtpPath_GenBank"\
+        | sed -e 's/<*FtpPath_GenBank>//g'\
+        | sed -e 's/<//g'\
+        | sed -r 's|.+>(ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA_.+)<.+|\1|'\
+        > list_huref_test.txt
+
+list_huref.txt :
+ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.28_GRCh38.p13/
+
+wget -r -R "index.html" --no-host-directories --cut-dirs=6 -i list_huref.txt
+
+3. bowtie2 db building
+bowtie2-build -f /data/EmiolaLab/duann2/human_proj/human_ref/GCA_000001405.28_GRCh38.p13_genomic.fna human_index 
+#index the reference genome,this doesn't work, might because contain to many Ns, So I download the index file directly from the website
+ftp:///ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/
+
+4. bowtie mapping
+bowtie db looks like this:
+-rw-r-----. 1 duann2 EmiolaLab 970M Nov 19  2014 GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index.1.bt2
+-rw-r-----. 1 duann2 EmiolaLab 724M Nov 19  2014 GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index.2.bt2
+-rw-r-----. 1 duann2 EmiolaLab  15K Nov 19  2014 GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index.3.bt2
+-rw-r-----. 1 duann2 EmiolaLab 724M Nov 19  2014 GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index.4.bt2
+-rw-r-----. 1 duann2 EmiolaLab 970M Nov 19  2014 GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index.rev.1.bt2
+-rw-r-----. 1 duann2 EmiolaLab 724M Nov 19  2014 GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index.rev.2.bt2
+
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/qsubfile
+for f in `cat fix.txt`
+do
+cat <<EOT >> $f\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16 
+#SBATCH --mem=100g
+#SBATCH --gres=lscratch:800
+#SBATCH --time=8-12:00:00
+module load bowtie/2
+module load bedtools
+module load samtools
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/qsubfile
+
+bowtie2 -x GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index -p 16 -1 /data/duann2/human_proj/repair_fastq/${f}_1_paired.fq.gz -2 /data/duann2/human_proj/repair_fastq/${f}_2_paired.fq.gz -S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}.sam
+# this is pair end
+#bowtie2 -x GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index -p 16 -f -U /data/EmiolaLab/Oral/Periodontitis/${f}.fasta.gz -S /data/EmiolaLab/duann2/sgene_proj/smorf_mapping/samfile/${f}.sam
+# this is for single end
+
+samtools view -bS -@ 16 /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}.sam | samtools sort > /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}_sortedIndexed.bam
+
+rm /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}.sam #too big, so I usually delete it
+
+samtools index /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}_sortedIndexed.bam
+
+bedtools genomecov -ibam /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}_sortedIndexed.bam -d > /data/EmiolaLab/duann2/human_proj/human_ref/samfile/${f}_sortedIndexed.bam.tsv
+#give you the coverage on each nucleatide location
+
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/qsubfile/$f\.qsub
+done
+
+# # batch job list in list example (two for loop)
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/qsubfile
+for f in human.* #split sample into different files
+do
+cat <<EOT >> $f\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16 
+#SBATCH --mem=32g
+#SBATCH --gres=lscratch:500
+#SBATCH --time=72:00:00
+module load bowtie/2
+module load bedtools
+module load samtools
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/
+for i in \`cat $f\`
+do
+bowtie2 -x GCA_000001405.15_GRCh38_full_analysis_set.fna.bowtie_index -1 /data/duann2/human_proj/fastq/\$i\_pass_1.fastq.gz -2 /data/duann2/human_proj/fastq/\$i\_pass_2.fastq.gz -S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/\$i\.sam
+samtools view -bS -@ 16 \$i\.sam | samtools sort > \$i\_sortedIndexed.bam #sometimes you will get an error due to the ram
+samtools index \$i\_sortedIndexed.bam
+
+bedtools genomecov -ibam \$i\_sortedIndexed.bam -bga -max 10 > \$i\_sortedIndexed.bam.tsv
+done
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/qsubfile/$f\.qsub
+done
+
+!!!There a error when mapping due to the uneven number of reads in two paired fastq file, it is possibly because that raw file brokend or they trim the two fastq file seperately
+#####to repair the fastq file that have uneven number of reads, so I use repair.sh(in bbmap, bbtools)########
+repair.sh in1=/data/duann2/human_proj/fastq/${f}_1.fastq.gz in2=/data/duann2/human_proj/fastq/${f}_2.fastq.gz out1=/data/EmiolaLab/duann2/human_proj/human_ref/fastq/${f}_fixed_1.fastq.gz out2=/data/EmiolaLab/duann2/human_proj/human_ref/fastq/${f}_fixed_2.fastq.gz outs=/data/EmiolaLab/duann2/human_proj/human_ref/fastq/${f}_singletons.fq repair
+
+bbtools repair in1=/data/duann2/human_proj/fastq/SRR13215448_1.fastq.gz in2=/data/duann2/human_proj/fastq/SRR13215448_2.fastq.gz out1=/data/EmiolaLab/duann2/human_proj/human_ref/fastq/SRR13215448_fixed_1.fastq.gz out2=/data/EmiolaLab/duann2/human_proj/human_ref/fastq/SRR13215448_fixed_2.fastq.gz outs=/data/EmiolaLab/duann2/human_proj/human_ref/fastq/SRR13215448_singletons.fq -Xmx100g repair
+#########it seems like doesn't work, so I am using trimmomatic to run it########
+module load trimmomatic
+java -jar $TRIMMOJAR PE -phred33 -threads 16 /data/duann2/human_proj/fastq/SRR13215448_1.fastq.gz /data/duann2/human_proj/fastq/SRR13215448_2.fastq.gz \
+output_forward_paired.fq.gz output_forward_unpaired.fq.gz \
+output_reverse_paired.fq.gz output_reverse_unpaired.fq.gz \
+ILLUMINACLIP:/usr/local/apps/trimmomatic/Trimmomatic-0.36/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
+
+java -jar $TRIMMOJAR PE -phred33 -threads 16 /data/duann2/human_proj/fastq/SRR13215457_1.fastq.gz /data/duann2/human_proj/fastq/SRR13215457_2.fastq.gz\
+ output_forward_paired.fq.gz output_forward_unpaired.fq.gz output_reverse_paired.fq.gz output_reverse_unpaired.fq.gz \
+ILLUMINACLIP:/usr/local/apps/trimmomatic/Trimmomatic-0.36/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
+
+##############trimmomatic##########################
+#!/bin/bash
+cd /data/duann2/human_proj/repair_fastq/
+for f in `cat repair.txt`
+do
+cat <<EOT >> $f\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=200g
+#SBATCH --gres=lscratch:500
+#SBATCH --time=5-00:00:00
+module load trimmomatic
+
+java -jar $TRIMMOJAR PE -phred33 -threads 16 \
+        /data/duann2/human_proj/fastq/${f}_1.fastq.gz /data/duann2/human_proj/fastq/${f}_2.fastq.gz \
+        /data/duann2/human_proj/repair_fastq/${f}_1_paired.fq.gz /data/duann2/human_proj/repair_fastq/${f}_1_unpaired.fq.gz \
+        /data/duann2/human_proj/repair_fastq/${f}_2_paired.fq.gz /data/duann2/human_proj/repair_fastq/${f}_2_unpaired.fq.gz \
+        ILLUMINACLIP:/usr/local/apps/trimmomatic/Trimmomatic-0.36/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 \
+        SLIDINGWINDOW:4:15
+
+EOT
+sbatch /data/duann2/human_proj/repair_fastq/$f\.qsub
+done
+
+4. human tsv reads file generated, we need to seperate the file to different chromosome file
+##################human tsv file seperate##############
+chr_sep.sh
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=200g
+#SBATCH --gres=lscratch:500
+#SBATCH --time=5-00:00:00
+
+for i in `cat /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/tsv_file/good.txt`
+do
+        for f in {1..22}
+        do
+        #mkdir /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/tsv_file/chr$f
+        grep -E -w ''chr$f'' /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/${i}_sortedIndexed.bam.tsv >> /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/tsv_file/chr$f/${i}_chr${f}\_ab.tsv
+        done
+done
+# you need to do extra two steps for x and y chromosome
+
+5. extract unmapped reads from sam file to see if it can map to the microbes
+unmap.sh
+!/bin/bash
+for i in `cat /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/srr95.txt`
+do
+cat <<EOT >> $i\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=200g
+#SBATCH --gres=lscratch:500
+#SBATCH --time=5-00:00:00
+module load bedtools
+module load samtools
+
+samtools view -b -f 4 /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/bamfile/${i}_sortedIndexed.bam > /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmapped/${i}_unmapped.bam
+
+#samtools sort /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmapped/${i}_unmapped.bam -o /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmapped/${i}_unmapped.qsort.bam
+
+#bedtools bamtofastq -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmapped/${i}_unmapped.qsort.bam -fq /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq2/${i}.unmapped.end1.fastq -fq2 /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq2/${i}.unmapped.end2.fastq 
+#bedtools bamtofastq -i unmapped.bam -fq $i.unmapped.fastq #retrieve single fastq works
+!!!I can't extract the two fastq file from bam, so I use the single one to mapping in human project in the next step
+
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/$i\.qsub
+done
+
+6. use single fastq mapped to the indexed rep82 database obtained from shogun pipeline
+https://github.com/knights-lab/SHOGUN
+wget -i https://raw.githubusercontent.com/knights-lab/SHOGUN/master/docs/shogun_db_links.txt
+
+
+
+
+
