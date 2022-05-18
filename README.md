@@ -1,2 +1,2 @@
 # human_microbe
-NIH_human_project
+human_project
