@@ -72,4 +72,4 @@ write.table(df_new, file = outputfile,quote = F, col.names = F,row.names = F, se
 pdf(image)
 ggplot(as.data.frame(df_new),aes(x = x, y = log(mean))) + geom_point() + scale_color_manual(values = c("blue"))+ xlab("position") + ylab("log(Coverage percentage)") + theme_bw() + geom_line(aes(x=x, y = (predt)),data = as.data.frame(df_new),col="red")
 dev.off()
-
+# already marked the significant position at each chrmosome use red lines based on the output from human_stats.R
