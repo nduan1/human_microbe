@@ -1,3 +1,4 @@
+#####to get relative abundance of each nuclectide location and use gam model to create a smooth lines for visualization
 library(dplyr)
 library(ggplot2)
 library(gsubfn)
