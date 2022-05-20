@@ -26,6 +26,15 @@ meta_data <- read.csv("/data/EmiolaLab/duann2/human_proj/human_R_proj/dataset/me
 # SRR13215405 SAMN16954474   male Cancer
 #...
 file_paths <- dir_ls(paste("/data/EmiolaLab/duann2/human_proj/human_R_proj/results/",inputfile,sep = ""))
+#here inputfile=a folder chr n contains 107 samples (SRR13215377_chr1_ab.output.tsv, SRR13215376_chr1_ab.output.tsv, SRR13215375_chr1_ab.output.tsv...)
+# SRR13215377_chr1_ab.output.tsv
+#1	0.117292428001571	0.165227430928148	-2.30388505863838
+#900001	0.0969952465618428	-0.0540381459465307	-2.27856405841745
+#1200001	0.094335312141923	-0.0898698290455549	-2.26966336153287
+#1500001	0.104381918859161	0.000669332504155599	-2.26036806738177
+#1800001	0.101916614679013	-0.0328400436697558	-2.25057952664753
+#....
+
 file_contents <- list()
 for (i in seq_along(file_paths)) {
   file_contents[[i]] <- read.csv(
