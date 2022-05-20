@@ -16,6 +16,15 @@ image <- opt$mfile
 
 #1 read in files
 meta_data <- read.csv("/data/EmiolaLab/duann2/human_proj/human_R_proj/dataset/metadata.csv",header = T,sep = ",")
+#metadata.csv
+#         Run    BioSample    Sex  Tumor
+# SRR13215457 SAMN16954469   male Cancer
+# SRR13215456 SAMN16954470   male Cancer
+# SRR13215438 SAMN16954471   male Cancer
+# SRR13215427 SAMN16954472   male Cancer
+# SRR13215416 SAMN16954473 female Cancer
+# SRR13215405 SAMN16954474   male Cancer
+#...
 file_paths <- dir_ls(paste("/data/EmiolaLab/duann2/human_proj/human_R_proj/results/",inputfile,sep = ""))
 file_contents <- list()
 for (i in seq_along(file_paths)) {
