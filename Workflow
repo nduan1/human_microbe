@@ -273,4 +273,7 @@ Columns 11 and 12 instead refer to total edit distance (number of differences be
 whether the query is an exact duplicate of the query above it (1 if so), respectively. 
 If taxonomy is assigned (-m CAPITALIST -b taxonomy.txt), that particular read's (interpolated if CAPITALIST) taxonomy is reported in column 13.
 
+conda activate shogun
+shogun coverage -i output.txt -d burst/ -o coverage.txt -l species 
+
 
