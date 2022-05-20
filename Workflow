@@ -255,6 +255,22 @@ done
 conda create burst
 conda install -c bioconda burst
 burst_linux_DB15 -q SRR13215398.unmapped.fasta -a burst/rep82.acx -r burst/rep82.edx -b rep82.tax -o output.txt 
-
+output format:http://www.drive5.com/usearch/manual/blast6out.html
+Field:
+1	 	Query label.
+2	 	Target (database sequence or cluster centroid) label.
+3	 	Percent identity.
+4	 	Alignment length.
+5	 	Number of mismatches.
+6	 	Number of gap opens.
+7	 	Start position in query. Query coordinates start with 1 at the first base in the sequence as it appears in the input file. For translated searches (nucleotide queries, protein targets), query start<end for +ve frame and start>end for -ve frame.
+8	 	End position in query.
+9	 	Start position in target. Target coordinates start with 1 at the first base in sequence as it appears in the database. For untranslated nucleotide searches, target start<end for plus strand, start>end for a reverse-complement alignment.
+10	 	End position in target.
+11	 	E-value calculated using Karlin-Altschul statistics.
+12	 	Bit score calculated using Karlin-Altschul statistics.
+Columns 11 and 12 instead refer to total edit distance (number of differences between query and reference in total) and 
+whether the query is an exact duplicate of the query above it (1 if so), respectively. 
+If taxonomy is assigned (-m CAPITALIST -b taxonomy.txt), that particular read's (interpolated if CAPITALIST) taxonomy is reported in column 13.
 
 
