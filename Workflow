@@ -225,7 +225,7 @@ EOT
 sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/$i\.qsub
 done
 
-6. use single fastq mapped to the indexed rep82 database obtained from shogun pipeline
+6.1 use single fastq mapped to the indexed rep82 database obtained from shogun pipeline
 https://github.com/knights-lab/SHOGUN. #shogun doesn't work which create the empty file. so I am manually run it
 wget -i https://raw.githubusercontent.com/knights-lab/SHOGUN/master/docs/shogun_db_links.txt
 #!/bin/bash
@@ -249,6 +249,12 @@ EOT
 sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/$f\.qsub
 done
 
+6.2 I am using burst aligner (https://github.com/knights-lab/BURST) to align the reads to rep82 database. 
+!!! You are gonna need a greater mem for the burst. If you don't have enough mem you will have "bus error"
+!!! sinteractive --cpus-per-task=16 --mem=300g 
+conda create burst
+conda install -c bioconda burst
+burst_linux_DB15 -q SRR13215398.unmapped.fasta -a burst/rep82.acx -r burst/rep82.edx -b rep82.tax -o output.txt 
 
 
 
