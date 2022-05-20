@@ -274,6 +274,11 @@ whether the query is an exact duplicate of the query above it (1 if so), respect
 If taxonomy is assigned (-m CAPITALIST -b taxonomy.txt), that particular read's (interpolated if CAPITALIST) taxonomy is reported in column 13.
 
 conda activate shogun
-shogun coverage -i output.txt -d burst/ -o coverage.txt -l species 
+shogun filter -i SRR13215398.unmapped.fasta -d . -o filter_test/ -t 16
+shogun align -a burst -i SRR13215398.unmapped.fasta -d . -o output_test/ -t 16
+shogun assign_taxonomy -a burst -i output_test/alignment.burst.b6 -d . -o coverage.txt 
+shogun coverage -i output_test/alignment.burst.b6 -d . -o shoguncoverage_strain.txt -l strain 
+shogun redistribute -i coverage.txt -d . -l all -o redistribute.txt
+shogun normalize -i coverage.txt -o normalized.txt
 
 
