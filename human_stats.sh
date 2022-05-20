@@ -1,6 +1,12 @@
 #!/bin/sh
 cd /data/EmiolaLab/duann2/human_proj/human_R_proj/human_dat/
 for k in `cat chrlist.txt` 
+#chrlist.txt
+#chr1
+#chr2
+#...
+#chrY
+
 do
 cat <<EOT >> $k\.qsub
 #!/bin/sh
