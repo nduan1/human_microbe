@@ -95,8 +95,15 @@ sig.data.sub <- subset(na.omit(sig.data),p.adj<0.05)
 colnames(sig.data.sub) <- c("position","p-value")
 
 write.table(sig.data.sub, file = outputfile,quote = F, col.names = F,row.names = F, sep='\t')
-
-
+##output would be significant position and adjusted p value
+#2100001	0.00184458897844473
+#3600001	0.0242266878102262
+#5100001	0.0334101219595682
+#5400001	0.0419355963002726
+#8400001	0.0113710026093534
+#15900001	0.033519833491915
+#19500001	0.0214854240077041
+#...
 
 
 
