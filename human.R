@@ -1,4 +1,12 @@
 #####to get relative abundance of each nuclectide location and use gam model to create a smooth lines for visualization
+#human.R will run by submitting job human.sh
+#input file 
+# e.g. SRR13215371_chr21_ab.tsv
+#chr21	1	0
+#chr21	2	0
+#chr21	3	0
+#chr21	4	0
+#....
 library(dplyr)
 library(ggplot2)
 library(gsubfn)
@@ -72,4 +80,13 @@ write.table(df_new, file = outputfile,quote = F, col.names = F,row.names = F, se
 pdf(image)
 ggplot(as.data.frame(df_new),aes(x = x, y = log(mean))) + geom_point() + scale_color_manual(values = c("blue"))+ xlab("position") + ylab("log(Coverage percentage)") + theme_bw() + geom_line(aes(x=x, y = (predt)),data = as.data.frame(df_new),col="red")
 dev.off()
+# the output df_new format is 
+#e.g. SRR13215377_chr21_ab.output.tsv
+#5100001 1.11268025489968        0.741023005722934       -0.552977021113403
+#5400001 0.281181482163505       -0.652138280856498      -0.537340749809931
+#5700001 0.34084241152694        -0.507810726366282      -0.521655342654666
+#6000001 0.361442226883144       -0.471590380699301      -0.505895293300911
+#6300001 0.452842596876521       -0.287669754277603      -0.490061559283455
+#....
+
 # already marked the significant position at each chrmosome use red lines based on the output from human_stats.R
