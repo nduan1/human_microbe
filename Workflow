@@ -249,6 +249,7 @@ EOT
 sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/$f\.qsub
 done
 
+
 6.2 I am using burst aligner (https://github.com/knights-lab/BURST) to align the reads to rep82 database. 
 !!! You are gonna need a greater mem for the burst. If you don't have enough mem you will have "bus error"
 !!! sinteractive --cpus-per-task=16 --mem=300g 
