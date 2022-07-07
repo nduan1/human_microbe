@@ -225,7 +225,7 @@ EOT
 sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/$i\.qsub
 done
 
-6.1 use single fastq mapped to the indexed rep82 database obtained from shogun pipeline
+#we don't need this step because the redistribute step in shogun: 6.1 use single fastq mapped to the indexed rep82 database obtained from shogun pipeline
 https://github.com/knights-lab/SHOGUN. #shogun doesn't work which create the empty file. so I am manually run it
 wget -i https://raw.githubusercontent.com/knights-lab/SHOGUN/master/docs/shogun_db_links.txt
 #!/bin/bash
@@ -282,4 +282,29 @@ shogun coverage -i output_test/alignment.burst.b6 -d . -o shoguncoverage_strain.
 shogun redistribute -i coverage.txt -d . -l all -o redistribute.txt
 shogun normalize -i coverage.txt -o normalized.txt
 
+7. I am running shogun for 95 samples
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile
+for f in `cat srr95.txt`
+do
+cat <<EOT >> $f\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16 
+#SBATCH --mem=300g
+#SBATCH --gres=lscratch:800
+#SBATCH --time=10-00:00:00
 
+export PATH="/data/duann2/deeplearning/conda/envs/shogun/bin:$PATH"
+conda activate shogun
+shogun filter -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq/${i}.unmapped.fasta -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/ -o shogun_filter/ -t 16
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile/$i\.qsub
+done
+
+#shogun align -a burst -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq/${i}.unmapped.fasta -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/ -o shogun_align/${i}/ -t 16
+#shogun assign_taxonomy -a burst -i shogun_align/${i}/alignment.burst.b6 -d . -o shogun_taxonomy/${f}_coverage.txt
+#shogun coverage -i shogun_align/${i}/alignment.burst.b6 -d . -o shoguncoverage_strain.txt -l strain
+#shogun redistribute -i coverage.txt -d . -l all -o redistribute.txt
+#shogun normalize -i coverage.txt -o normalized.txt
