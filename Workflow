@@ -308,3 +308,29 @@ done
 #shogun coverage -i shogun_align/${i}/alignment.burst.b6 -d . -o shoguncoverage_strain.txt -l strain
 #shogun redistribute -i coverage.txt -d . -l all -o redistribute.txt
 #shogun normalize -i coverage.txt -o normalized.txt
+
+8. I realized that all the unmapped reads are singleton, so I use samtools to extract the fasta from unmapped sam
+ref:https://manpages.ubuntu.com/manpages/focal/man1/samtools-fasta.1.html
+samtool.unmap.sh
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/
+for i in `cat srr95.txt`
+do
+cat <<EOT >> $i\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=200g
+#SBATCH --gres=lscratch:500
+#SBATCH --time=5-00:00:00
+module load samtools
+
+#samtools fasta -1 ${i}_pair1.fa -2 ${i}_pair2.fa -0 /dev/null -s /dev/null -n /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmapped/${i}_unmapped.bam 
+
+samtools fasta -0 /dev/null /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmapped/${i}_unmapped.bam > ${i}_all.unmapped.fasta 
+
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/$i\.qsub
+done
+
