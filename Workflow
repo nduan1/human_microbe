@@ -334,3 +334,20 @@ EOT
 sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/$i\.qsub
 done
 
+###I realized that the micrbiome reads contain polyG so, I am going to trim it ####
+ref:https://github.com/knights-lab/shi7
+wget https://github.com/knights-lab/shi7/releases/download/v0.9.9/shi7_0.9.9_linux_release.zip
+unzip shi7_*_release.zip
+echo "PATH=$PWD/shi7_0.9.9_linux_release:$PATH" >> ~/.bashrc
+. ~/.bash_profile
+. ~/.bashrc
+shi7.py -h
+##I end it up to use the fastp
+
+conda activate bbmap
+reformat.sh in=SRR13215351.unmapped.fastq out1=R1.fq out2=R2.fq
+
+
+
+
+
