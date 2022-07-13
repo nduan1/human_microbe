@@ -283,6 +283,7 @@ shogun redistribute -i coverage.txt -d . -l all -o redistribute.txt
 shogun normalize -i coverage.txt -o normalized.txt
 
 7. I am running shogun for 95 samples
+shogunfilter.sh
 #!/bin/bash
 cd /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile
 for f in `cat srr95.txt`
@@ -298,9 +299,9 @@ cat <<EOT >> $f\.qsub
 
 export PATH="/data/duann2/deeplearning/conda/envs/shogun/bin:$PATH"
 conda activate shogun
-shogun filter -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq/${i}.unmapped.fasta -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/ -o shogun_filter/ -t 16
+shogun filter -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq/${f}.unmapped.fasta -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_filter/$f -t 16
 EOT
-sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile/$i\.qsub
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile/$f\.qsub
 done
 
 #shogun align -a burst -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq/${i}.unmapped.fasta -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/ -o shogun_align/${i}/ -t 16
