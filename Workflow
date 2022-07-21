@@ -344,9 +344,47 @@ echo "PATH=$PWD/shi7_0.9.9_linux_release:$PATH" >> ~/.bashrc
 . ~/.bashrc
 shi7.py -h
 ##I end it up to use the fastp
+fastp.sh
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/
+for i in `cat srr95.txt`
+do
+cat <<EOT >> $i\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=50g
+#SBATCH --gres=lscratch:500
+#SBATCH --time=5-00:00:00
+module load fastp
+fastp -x -g -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/unmap_fq/${i}.unmapped.fastq -o /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/fastp/${i}.unmapped.trim.fastq
 
-conda activate bbmap
-reformat.sh in=SRR13215351.unmapped.fastq out1=R1.fq out2=R2.fq
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/qsubfile/$i\.qsub
+done
+
+##### shogun pipeline ####
+shogunfilter.sh
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile
+for f in `cat srr95.txt`
+do
+cat <<EOT >> $f\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16 
+#SBATCH --mem=300g
+#SBATCH --gres=lscratch:800
+#SBATCH --time=10-00:00:00
+
+export PATH="/data/duann2/deeplearning/conda/envs/shogun/bin:$PATH"
+conda activate shogun
+shogun filter -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/fastp/${f}.unmapped.trim.fasta -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_filter/$f -t 16
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile/$f\.qsub
+done
 
 
 
