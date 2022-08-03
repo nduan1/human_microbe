@@ -386,7 +386,8 @@ EOT
 sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile/$f\.qsub
 done
 
-
-
+### run shogun align test using bowtie2 ####
+#chnage the title format using header change
+shogun align -a bowtie2 -i srr5152newhead.fna -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o . -t 8
 
 
