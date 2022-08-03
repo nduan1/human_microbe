@@ -389,5 +389,6 @@ done
 ### run shogun align test using bowtie2 ####
 #chnage the title format using header change
 shogun align -a bowtie2 -i srr5152newhead.fna -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o . -t 8
-
-
+shogun assign_taxonomy -a bowtie2 -i alignment.bowtie2.sam -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o assign_tax.txt
+shogun redistribute -i assign_tax.txt -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -l all -o redistribute.txt
+shogun normalize -i assign_tax.txt -o normalized.txt
