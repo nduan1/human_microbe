@@ -395,3 +395,6 @@ shogun normalize -i assign_tax.txt -o normalized.txt
 
 
 bowtie2 -x /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/bt2/rep82 -p 16 -f -U SRR13215352.new.fna -S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/align_test/bowtiemap/SRR13215352.unmap.sam
+samtools view -bS -@ 8 SRR13215351.unmap.sam | samtools sort > SRR13215351.unmap.sortedIndexed.bam
+samtools merge combine.bam SRR13215351.unmap.sortedIndexed.bam SRR13215352.unmap.sortedIndexed.bam
+samtools view -h -o combine.sam combine.bam
