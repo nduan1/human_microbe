@@ -392,3 +392,6 @@ shogun align -a bowtie2 -i srr5152newhead.fna -d /data/EmiolaLab/duann2/human_pr
 shogun assign_taxonomy -a bowtie2 -i alignment.bowtie2.sam -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o assign_tax.txt
 shogun redistribute -i assign_tax.txt -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -l all -o redistribute.txt
 shogun normalize -i assign_tax.txt -o normalized.txt
+
+
+bowtie2 -x /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/bt2/rep82 -p 16 -f -U SRR13215352.new.fna -S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/align_test/bowtiemap/SRR13215352.unmap.sam
