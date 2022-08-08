@@ -397,4 +397,22 @@ shogun normalize -i assign_tax.txt -o normalized.txt
 bowtie2 -x /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/bt2/rep82 -p 16 -f -U SRR13215352.new.fna -S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/align_test/bowtiemap/SRR13215352.unmap.sam
 samtools view -bS -@ 8 SRR13215351.unmap.sam | samtools sort > SRR13215351.unmap.sortedIndexed.bam
 samtools merge combine.bam SRR13215351.unmap.sortedIndexed.bam SRR13215352.unmap.sortedIndexed.bam
-samtools view -h -o combine.sam combine.bam
+samtools view -b -F 4 combine.bam > combine.mapped.bam
+samtools view -o combine.mapped.sam combine.mapped.bam
+shogun assign_taxonomy -a bowtie2 -i combine.mapped.sam -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o assign_tax.txt
+
+
+
+#https://www.biostars.org/p/56246/
+Flag        Chr     Description
+0x0001      p       the read is paired in sequencing
+0x0002      P       the read is mapped in a proper pair
+0x0004      u       the query sequence itself is unmapped
+0x0008      U       the mate is unmapped
+0x0010      r       strand of the query (1 for reverse)
+0x0020      R       strand of the mate
+0x0040      1       the read is the first read in a pair
+0x0080      2       the read is the second read in a pair
+0x0100      s       the alignment is not primary
+0x0200      f       the read fails platform/vendor quality checks
+0x0400      d       the read is either a PCR or an optical duplicate
