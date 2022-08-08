@@ -401,7 +401,29 @@ samtools view -b -F 4 combine.bam > combine.mapped.bam
 samtools view -o combine.mapped.sam combine.mapped.bam
 shogun assign_taxonomy -a bowtie2 -i combine.mapped.sam -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o assign_tax.txt
 
+import sys,getopt
+def main(argv):
+   inputfile = ''
+   outputfile = ''
+   try:
+      opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+   except getopt.GetoptError:
+      print 'test.py -i <inputfile> -o <outputfile>'
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print 'test.py -i <inputfile> -o <outputfile>'
+         sys.exit()
+      elif opt in ("-i", "--ifile"):
+         inputfile = arg
+      elif opt in ("-o", "--ofile"):
+         outputfile = arg
+df = pd.read_csv(inputfile,header=None,index_col=False)
+df=df.replace('\.','_',regex=True)
+df.to_csv(outputfile, sep = '\t',header=False,index=False)
 
+if __name__ == "__main__":
+   main(sys.argv[1:])
 
 #https://www.biostars.org/p/56246/
 Flag        Chr     Description
