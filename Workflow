@@ -386,6 +386,85 @@ EOT
 sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/qsubfile/$f\.qsub
 done
 
+###finish filter, change the header format for each fna file####
+new.replace.py
+
+import numpy as np
+import pandas as pd
+import os
+import sys,getopt
+
+def main(argv):
+   inputfile = None
+   outputfile = None
+   try:
+      opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+   except getopt.GetoptError:
+      print ('test.py -i <inputfile> -o <outputfile>')
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print ('test.py -i <inputfile> -o <outputfile>')
+         sys.exit()
+      elif opt in ("-i", "--ifile"):
+         inputfile = arg
+      elif opt in ("-o", "--ofile"):
+         outputfile = arg
+   df = pd.read_csv(inputfile,header=None,index_col=False)
+   df=df.replace('\.','_',regex=True)
+   df.to_csv(outputfile, sep = '\t',header=False,index=False)
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
+
+headerchange.sh
+#!/bin/bash
+cd /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/headerqsub
+for i in `cat srr95.txt`
+do
+cat <<EOT >> $i\.qsub
+#!/bin/bash
+#SBATCH --partition=norm
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16g
+#SBATCH --gres=lscratch:800
+#SBATCH --time=5-00:00:00
+module load python
+python new.replace.py -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_filter/done_filter/${i}/combined_seqs.fna -o /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/headerreplace/${i}_replace.fna
+EOT
+sbatch /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/headerqsub/$i\.qsub
+done
+
+###after header change, bowtie2 mapping individually using -U command
+bowtie2 -x /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/bt2/rep82 -p 16 -f -U /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/headerreplace/${i}_replace.fna 
+-S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_align/${i}_replace_align.sam
+
+###after mapping, convert to bam and sort and filter unmapped reads for each sample####
+bowtie2 -x /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/bt2/rep82 -p 16 -f -U /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/headerreplace/${i}_replace.fna -S /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_align/${i}_replace_align.sam
+
+samtools view -bS -@ 8 /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_align/${i}_replace_align.sam | samtools sort > /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_align/${i}_replace_align.bam
+
+samtools view -b -F 4 /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_align/${i}_replace_align.bam > /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_align/${i}_replace_align.mapped.bam
+
+### we get bam file, and then we merge bam file together and convert merge file to sam without header ###
+samtools merge combine.bam SRR13215351.unmap.sortedIndexed.bam SRR13215352.unmap.sortedIndexed.bam
+
+#https://www.biostars.org/p/56246/
+Flag        Chr     Description
+0x0001      p       the read is paired in sequencing
+0x0002      P       the read is mapped in a proper pair
+0x0004      u       the query sequence itself is unmapped
+0x0008      U       the mate is unmapped
+0x0010      r       strand of the query (1 for reverse)
+0x0020      R       strand of the mate
+0x0040      1       the read is the first read in a pair
+0x0080      2       the read is the second read in a pair
+0x0100      s       the alignment is not primary
+0x0200      f       the read fails platform/vendor quality checks
+0x0400      d       the read is either a PCR or an optical duplicate
+
+
 ### run shogun align test using bowtie2 ####
 #chnage the title format using header change
 shogun align -a bowtie2 -i srr5152newhead.fna -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o . -t 8
@@ -401,40 +480,9 @@ samtools view -b -F 4 combine.bam > combine.mapped.bam
 samtools view -o combine.mapped.sam combine.mapped.bam
 shogun assign_taxonomy -a bowtie2 -i combine.mapped.sam -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o assign_tax.txt
 
-import sys,getopt
-def main(argv):
-   inputfile = ''
-   outputfile = ''
-   try:
-      opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-   except getopt.GetoptError:
-      print 'test.py -i <inputfile> -o <outputfile>'
-      sys.exit(2)
-   for opt, arg in opts:
-      if opt == '-h':
-         print 'test.py -i <inputfile> -o <outputfile>'
-         sys.exit()
-      elif opt in ("-i", "--ifile"):
-         inputfile = arg
-      elif opt in ("-o", "--ofile"):
-         outputfile = arg
-df = pd.read_csv(inputfile,header=None,index_col=False)
-df=df.replace('\.','_',regex=True)
-df.to_csv(outputfile, sep = '\t',header=False,index=False)
 
-if __name__ == "__main__":
-   main(sys.argv[1:])
 
-#https://www.biostars.org/p/56246/
-Flag        Chr     Description
-0x0001      p       the read is paired in sequencing
-0x0002      P       the read is mapped in a proper pair
-0x0004      u       the query sequence itself is unmapped
-0x0008      U       the mate is unmapped
-0x0010      r       strand of the query (1 for reverse)
-0x0020      R       strand of the mate
-0x0040      1       the read is the first read in a pair
-0x0080      2       the read is the second read in a pair
-0x0100      s       the alignment is not primary
-0x0200      f       the read fails platform/vendor quality checks
-0x0400      d       the read is either a PCR or an optical duplicate
+
+
+
+
