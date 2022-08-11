@@ -448,7 +448,12 @@ samtools view -bS -@ 8 /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_
 samtools view -b -F 4 /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_align/${i}_replace_align.bam > /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_align/${i}_replace_align.mapped.bam
 
 ### we get bam file, and then we merge bam file together and convert merge file to sam without header ###
-samtools merge combine.bam SRR13215351.unmap.sortedIndexed.bam SRR13215352.unmap.sortedIndexed.bam
+samtools merge combined95.bam *replace_align.mapped.bam
+samtools view -o combined95.sam combined95.bam
+I have moved all the combined sam and bam file in shogun_taxonomy folder
+conda activate shogun
+shogun assign_taxonomy -a bowtie2 -i /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_taxonomy/combined95.sam -d /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/db/ -o /data/EmiolaLab/duann2/human_proj/human_ref/samfile/done_map/bam_file/extract_unmap/shogun_pip/shogun_taxonomy/assign_tax.txt
+
 
 #https://www.biostars.org/p/56246/
 Flag        Chr     Description
