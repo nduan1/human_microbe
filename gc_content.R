@@ -29,3 +29,5 @@ binSize<-20000
 
 chr_windowAll<-slidingwindowgc(binSize,chr8_fa[[1]])
 write.table(chr_windowAll, file = outputfile,quote = F, col.names = F,row.names = F, sep='\t')
+
+#the output would be pos and gc_content
