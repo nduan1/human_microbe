@@ -23,3 +23,18 @@ Importance of SVs:
 Human disease: SVs are implicated in a wide range of genetic disorders, including cancer, developmental disorders, and inherited diseases. 
 Human evolution: SVs play a role in the evolution of new traits and speciation. 
 Population genetics: SVs contribute to genetic diversity within and between populations. 
+
+
+
+In haplotype phasing, sequencing reads are classified as belonging to one of two haplotypes (or parental chromosomes) based on the genetic information within them. Essentially, phasing determines which alleles (the different versions of a gene) are inherited together from each parent. This process helps to distinguish between the two homologous copies of a chromosome in a diploid organism. 
+Here's a more detailed explanation:
+Haplotypes:
+In a diploid organism (like humans), each individual has two copies of each chromosome, one inherited from each parent. These are called haplotypes. 
+Phasing:
+Phasing refers to the process of determining which alleles (variants) at different sites on a chromosome are inherited together on the same haplotype. 
+Reads and Haplotype Assignment:
+Sequencing reads are assigned to one of the two haplotypes based on the alleles they contain. 
+Example:
+If a read contains alleles 'A' and 'B' at specific sites, it might be assigned to haplotype 1, while a read with alleles 'C' and 'D' at the same sites might be assigned to haplotype 2. 
+Benefits of Phasing:
+Phasing allows for a more detailed understanding of an individual's genetic makeup, including identifying the joint effects of multiple variants inherited together. This can be useful in various applications, including ancestry studies, imputation of unobserved genotypes, and identifying causal variants for diseases
